@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Simp Mail — Disposable Email</title>
+<meta name="description" content="Simp Mail provides free, anonymous and self-destructing email addresses.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+ <div class="top">
+  <a class="logo" href="/"><svg viewBox="0 0 48 48"><rect x="4" y="9" width="40" height="30" rx="7" fill="#2fd6a3"/><path d="M8 15l16 12 16-12" fill="none" stroke="#04281d" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Simp<b>Mail</b></a>
+  <div class="tools">
+   <button class="chip" id="theme" aria-label="Theme">🌗</button>
+   <select class="chip" id="lang" aria-label="Language">
+    <option value="en">EN 🇬🇧</option><option value="ar">AR 🇸🇦</option><option value="es">ES 🇪🇸</option><option value="fr">FR 🇫🇷</option><option value="de">DE 🇩🇪</option>
+   </select>
+  </div>
+ </div>
+
+ <div class="hero">
+  <h1 data-i18n="h1">Disposable email, ready in one second.</h1>
+  <p data-i18n="sub">A private inbox that protects your identity and expires on its own. No sign-up, no tracking.</p>
+ </div>
+
+ <div class="card">
+  <div class="addr">
+   <output id="addr">Generating your address…</output>
+   <div class="ring" id="ring" title="Time left (7 days)"><span id="time">7d</span></div>
+  </div>
+  <div class="actions">
+   <button class="btn main" id="copy" data-i18n="copy">Copy</button>
+   <button class="btn" id="qrBtn" data-i18n="qr">QR code</button>
+   <button class="btn" id="refresh" data-i18n="refresh">Refresh</button>
+   <button class="btn" id="extend" data-i18n="extend">+7 days</button>
+   <button class="btn" id="change" data-i18n="change">New address</button>
+   <button class="btn danger" id="del" data-i18n="del">Delete</button>
+  </div>
+ </div>
+
+ <div class="inbox">
+  <header><span data-i18n="inbox">Inbox<span class="badge" id="count">0</span></span><small id="status"></small></header>
+  <div class="list" id="list"></div>
+ </div>
+
+ <section class="info">
+  <h2 data-i18n="aboutT">What is a disposable email address?</h2>
+  <p data-i18n="aboutP">A disposable email address is a temporary mailbox that receives messages for a limited time and is then deleted automatically.</p>
+  <div class="grid">
+   <div><h3 data-i18n="f1t">Privacy by design</h3><p data-i18n="f1p">Your real address is never exposed to third-party services.</p></div>
+   <div><h3 data-i18n="f2t">Spam-free</h3><p data-i18n="f2p">Registrations and downloads no longer fill your personal inbox.</p></div>
+   <div><h3 data-i18n="f3t">Safe testing</h3><p data-i18n="f3p">Developers can test sign-up flows with as many addresses as needed.</p></div>
+  </div>
+ </section>
+</div>
+
+<footer>
+ <nav><a href="#" data-i18n="terms">Terms</a><a href="#" data-i18n="privacy">Privacy</a><a href="#" data-i18n="contact">Contact</a><a href="#" data-i18n="faq">FAQ</a></nav>
+ © <span id="yr"></span> SimpMail.com
+</footer>
+
+<dialog id="dlg"><h3 data-i18n="qr">QR code</h3><div id="qr"></div><button class="btn main" id="close" data-i18n="close">Close</button></dialog>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+/* ---------- Translations ---------- */
+const T={
+en:{h1:`Disposable email, ready in one second.`,sub:`A private inbox that protects your identity and expires on its own. No sign-up, no tracking.`,copy:`Copy`,copied:`Copied!`,qr:`QR code`,refresh:`Refresh`,extend:`+7 days`,change:`New address`,del:`Delete`,inbox:`Inbox`,empty:`Your inbox is empty`,emptySub:`Waiting for incoming messages…`,aboutT:`What is a disposable email address?`,aboutP:`A disposable email address is a temporary mailbox that receives messages for a limited time and is then deleted automatically. It lets you verify accounts and download resources without disclosing your personal identity.`,f1t:`Privacy by design`,f1p:`Your real address is never exposed to third-party services.`,f2t:`Spam-free`,f2p:`Registrations and downloads no longer fill your personal inbox.`,f3t:`Safe testing`,f3p:`Developers can test sign-up flows with as many addresses as needed.`,terms:`Terms`,privacy:`Privacy`,contact:`Contact`,faq:`FAQ`,close:`Close`,from:`From`,loading:`Generating your address…`,error:`Could not connect. Press New address to retry.`},
+ar:{h1:`بريد مؤقت جاهز في ثانية واحدة.`,sub:`صندوق وارد خاص يحمي هويتك وينتهي من تلقاء نفسه. بلا تسجيل وبلا تتبع.`,copy:`نسخ`,copied:`تم النسخ!`,qr:`رمز QR`,refresh:`تحديث`,extend:`+7 أيام`,change:`عنوان جديد`,del:`حذف`,inbox:`الوارد`,empty:`صندوق الوارد فارغ`,emptySub:`في انتظار الرسائل الواردة…`,aboutT:`ما المقصود بالبريد الإلكتروني المؤقت؟`,aboutP:`البريد المؤقت صندوق رسائل قصير العمر يستقبل الرسائل خلال مدة محددة ثم يُحذف تلقائيًا، ويتيح لك توثيق الحسابات وتنزيل المحتوى دون الكشف عن هويتك الحقيقية.`,f1t:`خصوصية مدمجة`,f1p:`لا يظهر عنوانك الحقيقي لأي خدمة خارجية.`,f2t:`بلا رسائل مزعجة`,f2p:`لن تمتلئ رسائلك الشخصية بإعلانات التسجيل والتنزيل.`,f3t:`اختبار آمن`,f3p:`يستطيع المطورون اختبار مسارات التسجيل بعدد غير محدود من العناوين.`,terms:`الشروط`,privacy:`الخصوصية`,contact:`اتصل بنا`,faq:`الأسئلة الشائعة`,close:`إغلاق`,from:`من`,loading:`جارِ التحميل…`,error:`تعذّر الاتصال. اضغط عنوان جديد للمحاولة.`},
+es:{h1:`Correo desechable, listo en un segundo.`,sub:`Una bandeja privada que protege tu identidad y caduca sola. Sin registro ni rastreo.`,copy:`Copiar`,copied:`¡Copiado!`,qr:`Código QR`,refresh:`Actualizar`,extend:`+7 días`,change:`Nueva dirección`,del:`Eliminar`,inbox:`Bandeja`,empty:`Tu bandeja está vacía`,emptySub:`Esperando mensajes entrantes…`,aboutT:`¿Qué es un correo electrónico desechable?`,aboutP:`Es un buzón temporal que recibe mensajes durante un tiempo limitado y luego se elimina automáticamente. Permite verificar cuentas y descargar recursos sin revelar tu identidad.`,f1t:`Privacidad desde el diseño`,f1p:`Tu dirección real nunca se expone a terceros.`,f2t:`Sin spam`,f2p:`Los registros y descargas ya no llenan tu bandeja personal.`,f3t:`Pruebas seguras`,f3p:`Los desarrolladores pueden probar registros con tantas direcciones como necesiten.`,terms:`Términos`,privacy:`Privacidad`,contact:`Contacto`,faq:`FAQ`,close:`Cerrar`,from:`De`,loading:`Generando tu dirección…`,error:`No se pudo conectar. Pulsa Nueva dirección.`},
+fr:{h1:`E-mail jetable, prêt en une seconde.`,sub:`Une boîte privée qui protège votre identité et expire seule. Sans inscription ni suivi.`,copy:`Copier`,copied:`Copié !`,qr:`Code QR`,refresh:`Actualiser`,extend:`+7 jours`,change:`Nouvelle adresse`,del:`Supprimer`,inbox:`Boîte de réception`,empty:`Votre boîte est vide`,emptySub:`En attente de messages…`,aboutT:`Qu’est-ce qu’une adresse e-mail jetable ?`,aboutP:`Une boîte temporaire qui reçoit des messages pendant une durée limitée avant d’être supprimée automatiquement. Elle permet de valider des comptes sans révéler votre identité.`,f1t:`Confidentialité native`,f1p:`Votre vraie adresse n’est jamais exposée aux services tiers.`,f2t:`Sans spam`,f2p:`Inscriptions et téléchargements n’encombrent plus votre boîte personnelle.`,f3t:`Tests sûrs`,f3p:`Les développeurs testent leurs inscriptions avec autant d’adresses que nécessaire.`,terms:`Conditions`,privacy:`Confidentialité`,contact:`Contact`,faq:`FAQ`,close:`Fermer`,from:`De`,loading:`Génération de l’adresse…`,error:`Connexion impossible. Cliquez sur Nouvelle adresse.`},
+de:{h1:`Wegwerf-E-Mail in einer Sekunde.`,sub:`Ein privates Postfach, das Ihre Identität schützt und von selbst abläuft. Ohne Anmeldung, ohne Tracking.`,copy:`Kopieren`,copied:`Kopiert!`,qr:`QR-Code`,refresh:`Aktualisieren`,extend:`+7 Tage`,change:`Neue Adresse`,del:`Löschen`,inbox:`Posteingang`,empty:`Ihr Posteingang ist leer`,emptySub:`Warten auf eingehende Nachrichten…`,aboutT:`Was ist eine Wegwerf-E-Mail-Adresse?`,aboutP:`Ein temporäres Postfach, das für begrenzte Zeit Nachrichten empfängt und danach automatisch gelöscht wird. So bestätigen Sie Konten, ohne Ihre Identität preiszugeben.`,f1t:`Datenschutz von Grund auf`,f1p:`Ihre echte Adresse wird Drittanbietern nie offengelegt.`,f2t:`Spamfrei`,f2p:`Registrierungen und Downloads füllen Ihr privates Postfach nicht mehr.`,f3t:`Sicheres Testen`,f3p:`Entwickler testen Anmeldungen mit beliebig vielen Adressen.`,terms:`AGB`,privacy:`Datenschutz`,contact:`Kontakt`,faq:`FAQ`,close:`Schließen`,from:`Von`,loading:`Adresse wird erstellt…`,error:`Verbindung fehlgeschlagen. Neue Adresse wählen.`}
+};
+let L=localStorage.getItem("lang")||"en";
+const $=id=>document.getElementById(id), t=k=>(T[L]&&T[L][k])||T.en[k];
+function applyLang(){
+  document.documentElement.lang=L;
+  document.documentElement.dir=L==="ar"?"rtl":"ltr";
+  document.querySelectorAll("[data-i18n]").forEach(e=>{
+    const k=e.dataset.i18n, c=e.querySelector(".badge");
+    if(k==="inbox"){e.firstChild.textContent=t(k);}else e.textContent=t(k);
+  });
+  $("lang").value=L; render(); if(!acc)$("addr").textContent=t(addrState);
+}
+$("lang").onchange=e=>{L=e.target.value;localStorage.setItem("lang",L);applyLang()};
+
+/* ---------- Mail engine (mail.tm public API) ---------- */
+const API="https://api.mail.tm";
+const LIFE=7*24*60*60*1000;
+let addrState="loading",acc=null,token=null,msgs=[],seen=new Set(),expires=0,openId=null;
+const rnd=n=>[...crypto.getRandomValues(new Uint8Array(n))].map(x=>"abcdefghjkmnpqrstuvwxyz23456789"[x%31]).join("");
+const toast=m=>{const e=$("toast");e.textContent=m;e.classList.add("show");setTimeout(()=>e.classList.remove("show"),1600)};
+const api=(p,o={})=>fetch(API+p,{...o,headers:{...(o.body?{"Content-Type":"application/json"}:{}),...(token?{Authorization:"Bearer "+token}:{}),...o.headers}});
+
+async function restore(){
+  try{
+    const o=JSON.parse(localStorage.getItem("simp")||"null");
+    if(!o||o.expires<=Date.now())return false;
+    const tk=await (await api("/token",{method:"POST",body:JSON.stringify({address:o.address,password:o.password})})).json();
+    if(!tk.token)return false;
+    token=tk.token;acc={id:o.id,address:o.address};expires=o.expires;
+    $("addr").textContent=o.address;await refresh();return true;
+  }catch(e){return false}
+}
+async function create(){
+  addrState="loading";$("addr").textContent=t("loading");$("status").textContent="";
+  try{
+    const d=(await (await api("/domains")).json())["hydra:member"][0].domain;
+    const address=rnd(10)+"@"+d,password=rnd(16);
+    const r=await api("/accounts",{method:"POST",body:JSON.stringify({address,password})});
+    const j=await r.json(); token=null;
+    const tk=await (await api("/token",{method:"POST",body:JSON.stringify({address,password})})).json();
+    token=tk.token;acc={id:j.id,address};msgs=[];seen.clear();openId=null;
+    expires=Date.now()+LIFE;$("addr").textContent=address;render();
+    localStorage.setItem("simp",JSON.stringify({id:j.id,address,password,expires}));
+  }catch(e){acc=null;addrState="error";$("addr").textContent=t("error");console.error(e)}
+}
+async function refresh(){
+  if(!token)return;
+  try{
+    const j=await (await api("/messages")).json();
+    msgs=j["hydra:member"]||[];render();
+  }catch(e){}
+}
+function render(){
+  $("count").textContent=msgs.filter(m=>!seen.has(m.id)).length;
+  const l=$("list");
+  if(openId){return;}
+  if(!msgs.length){
+    l.innerHTML=`<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 8l8 5 8-5M5 5h14a1 1 0 011 1v12a1 1 0 01-1 1H5a1 1 0 01-1-1V6a1 1 0 011-1z"/></svg><h3>${t("empty")}</h3><p>${t("emptySub")}</p></div>`;return;
+  }
+  l.innerHTML="";
+  msgs.forEach(m=>{
+    const b=document.createElement("button");b.className="msg"+(seen.has(m.id)?"":" new");
+    const s=document.createElement("strong"),f=document.createElement("small"),i=document.createElement("small");
+    s.textContent=m.subject||"(no subject)";f.textContent=t("from")+": "+(m.from.name||m.from.address);i.textContent=m.intro||"";
+    b.append(s,f,i);b.onclick=()=>read(m.id);l.append(b);
+  });
+}
+async function read(id){
+  const m=await (await api("/messages/"+id)).json();seen.add(id);openId=id;
+  const l=$("list");l.innerHTML="";
+  const d=document.createElement("div");d.className="reader";
+  const bk=document.createElement("button");bk.className="btn";bk.textContent="←";bk.onclick=()=>{openId=null;render()};
+  const h=document.createElement("h3");h.textContent=m.subject;
+  const f=document.createElement("small");f.textContent=t("from")+": "+m.from.address;
+  const fr=document.createElement("iframe");fr.setAttribute("sandbox","");
+  fr.srcdoc=(m.html&&m.html[0])||("<pre style='font-family:sans-serif;white-space:pre-wrap'>"+(m.text||"").replace(/</g,"&lt;")+"</pre>");
+  d.append(bk,h,f,fr);l.append(d);$("count").textContent=msgs.filter(x=>!seen.has(x.id)).length;
+}
+
+/* ---------- Timer ---------- */
+setInterval(()=>{
+  if(!acc)return;
+  const left=Math.max(0,expires-Date.now()),d=Math.floor(left/864e5),h=Math.floor(left%864e5/36e5),m=Math.floor(left%36e5/6e4),s=Math.floor(left%6e4/1000);
+  $("time").textContent=d?d+"d "+h+"h":h?h+"h "+m+"m":m+":"+String(s).padStart(2,"0");
+  $("ring").style.setProperty("--p",Math.min(100,left/LIFE*100));
+  $("ring").classList.toggle("low",left<3600000);
+  if(!left){create()}
+},1000);
+setInterval(refresh,8000);
+
+/* ---------- Buttons ---------- */
+$("copy").onclick=async()=>{if(!acc)return;try{await navigator.clipboard.writeText(acc.address);toast(t("copied"))}catch(e){}};
+$("refresh").onclick=refresh;
+$("extend").onclick=()=>{expires=Date.now()+LIFE;try{const o=JSON.parse(localStorage.getItem("simp"));o.expires=expires;localStorage.setItem("simp",JSON.stringify(o))}catch(e){}};
+$("change").onclick=async()=>{localStorage.removeItem("simp");if(acc)await api("/accounts/"+acc.id,{method:"DELETE"}).catch(()=>{});create()};
+$("del").onclick=$("change").onclick;
+$("qrBtn").onclick=()=>{if(!acc)return;$("qr").innerHTML="";new QRCode($("qr"),{text:acc.address,width:200,height:200});$("dlg").showModal()};
+$("close").onclick=()=>$("dlg").close();
+$("theme").onclick=()=>{const h=document.documentElement;h.dataset.theme=h.dataset.theme==="dark"?"light":"dark";localStorage.setItem("theme",h.dataset.theme)};
+document.documentElement.dataset.theme=localStorage.getItem("theme")||(matchMedia("(prefers-color-scheme: light)").matches?"light":"dark");
+$("yr").textContent=new Date().getFullYear();
+applyLang();restore().then(ok=>{if(!ok)create()});
+</script>
+</body>
+</html>
